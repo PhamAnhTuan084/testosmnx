@@ -636,11 +636,11 @@ def main():
         # st.text("Loaded Map Done")
 
         # Thiết lập địa điểm và network_type
-        location = "Thủ Đức VietNam"
+        #location = "Thủ Đức VietNam"
         network_type = 'bike'
 
         # Sử dụng osmnx để tải dữ liệu đồng thời xây dựng biểu đồ đường đi
-        G = ox.graph_from_place(location, network_type=network_type)
+        G = ox.graph_from_place(f'{province_name}, VietNam', network_type=network_type)
         st.text("Loaded Map Done")
         data['Longitude'] = data['Longitude'].astype(float)
         data['Latitude'] = data['Latitude'].astype(float)
