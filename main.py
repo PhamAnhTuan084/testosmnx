@@ -299,36 +299,6 @@ def calculate_distance_between_two_points(point1_coords, point2_coords, graph, f
 
     return shortest_paths
 
-# def draw_optimal_path(visited_points, baby_map, G, random_color):
-#     # Extract the last two points from visited_points
-#     visited_points_df = pd.DataFrame(visited_points.tail(2))
-#     last_point = (visited_points_df.iloc[-2]['Latitude'], visited_points_df.iloc[-2]['Longitude'])
-#     final_point = (visited_points_df.iloc[-1]['Latitude'], visited_points_df.iloc[-1]['Longitude'])
-
-#     # Find the optimal path using OSMnx
-#     start_node = ox.distance.nearest_nodes(G, last_point[1], last_point[0])
-#     destination_node = ox.distance.nearest_nodes(G, final_point[1], final_point[0])
-
-#     optimal_path_nodes = ox.shortest_path(G, start_node, destination_node, weight='length')
-
-#     if optimal_path_nodes is not None:
-#         optimal_path_coordinates = [(G.nodes[node]['y'], G.nodes[node]['x']) for node in optimal_path_nodes]
-
-#         # Draw the optimal path between the last two points
-#         folium.PolyLine(optimal_path_coordinates, color=random_color, weight=2.5, opacity=1).add_to(baby_map)
-#     else:
-#         print("No path found between", start_node, "and", destination_node)
-
-#     # Add marker with popup content for the second-to-last point
-#     last_point_popup = f"Order: {visited_points_df.index[-2] + 1}<br>OutletID: {visited_points_df['OutletID'].iloc[-2]}<br>OutletName: {visited_points_df['OutletName'].iloc[-2]}<br>Latitude: {last_point[0]}<br>Longitude: {last_point[1]}<br>SRD: {visited_points_df['SRD'].iloc[-2]}<br>RD: {visited_points_df['RD'].iloc[-2]}"
-#     folium.Marker(location=[last_point[0], last_point[1]], popup=folium.Popup(last_point_popup, max_width=300)).add_to(baby_map)
-
-#     # Add marker with popup content for the last point
-#     final_point_popup = f"Order: {visited_points_df.index[-1] + 1}<br>OutletID: {visited_points_df['OutletID'].iloc[-1]}<br>OutletName: {visited_points_df['OutletName'].iloc[-1]}<br>Latitude: {final_point[0]}<br>Longitude: {final_point[1]}<br>SRD: {visited_points_df['SRD'].iloc[-1]}<br>RD: {visited_points_df['RD'].iloc[-1]}"
-#     folium.Marker(location=[final_point[0], final_point[1]], popup=folium.Popup(final_point_popup, max_width=300)).add_to(baby_map)
-
-#     return baby_map
-
 def find_nearest_point(visited_points, closest_points):
     # Lấy ra hai dòng cuối cùng từ visited_points
     last_two_rows = visited_points.tail(2)
@@ -364,147 +334,6 @@ def find_nearest_point(visited_points, closest_points):
     min_perimeter_outlet_df = pd.concat([pd.DataFrame(min_perimeter_outlet_info, index=[0])])
 
     return min_perimeter_outlet_df
-
-# def create_path_2(group_1_df, G, new_map, random_color):
-#     # Tính toán tọa độ của hình vuông bao quanh tất cả các điểm
-#     min_lat = group_1_df['Latitude'].min()
-#     max_lat = group_1_df['Latitude'].max()
-#     min_lon = group_1_df['Longitude'].min()
-#     max_lon = group_1_df['Longitude'].max()
-
-#     # Sử dụng hàm để tạo bản đồ
-#     baby_map = create_square_map(group_1_df, min_lat, max_lat, min_lon, max_lon)
-
-#     # Sử dụng để tìm điểm gần góc
-#     min_distance_data = find_nearest_corner_point(min_lat, min_lon, max_lat, max_lon, group_1_df)
-
-#     # Lọc data
-#     filtered_df = group_1_df.drop(min_distance_data[1]['point'].name)
-
-#     # Assuming min_distance_data is defined somewhere in your code
-#     nearest_point_coords = min_distance_data[0]
-
-#     # Call the function to calculate distances
-#     distances = calculate_distance(nearest_point_coords, G, filtered_df)
-
-#     # Add distances to filtered_df
-#     filtered_df['distance_to_nearest'] = filtered_df.index.map(distances)
-
-#     # Get the four closest points
-#     closest_points = filtered_df.nsmallest(1, 'distance_to_nearest')
-
-#     start_point = min_distance_data[1]['point']
-
-#     # Tạo DataFrame rỗng để lưu các điểm đã thăm
-#     visited_points = pd.DataFrame(columns=['OutletID', 'OutletName', 'Latitude', 'Longitude', 'SRD', 'RD'])
-
-#     # Thêm start_point vào DataFrame
-#     visited_points = pd.concat([visited_points, start_point.to_frame().T], ignore_index=True)
-#     visited_points = pd.concat([visited_points, closest_points], ignore_index=True)
-
-#     # Filter out rows from sorted_df that are not in visited_points based on 'OutletID'
-#     filtered_sorted_df = group_1_df[~group_1_df['OutletID'].isin(visited_points['OutletID'])]
-
-#     new_map = draw_optimal_path(visited_points, new_map, G, random_color)
-
-#     while not filtered_sorted_df.empty:
-#         last_two_rows = visited_points.tail(2)
-#         distances_between_two_points = calculate_distance_between_two_points(last_two_rows.iloc[0], last_two_rows.iloc[1], G, filtered_sorted_df)
-
-#         closest_points_indices = sorted(distances_between_two_points, key=distances_between_two_points.get)[:2]
-#         closest_points = filtered_sorted_df.loc[closest_points_indices]
-#         min_perimeter_outlet_df = find_nearest_point(visited_points, closest_points)
-
-#         visited_points = pd.concat([visited_points, min_perimeter_outlet_df], ignore_index=True)
-#         filtered_sorted_df = group_1_df[~group_1_df['OutletID'].isin(visited_points['OutletID'])]
-#         filtered_sorted_df.info()
-
-#         baby_map = draw_optimal_path(visited_points, new_map, G, random_color)
-
-#     return visited_points, new_map
-
-# def main():
-#     st.markdown("<h1 style='text-align: center; font-size: 55px;'>Traveling Salesman Problem</h1>", unsafe_allow_html=True)
-
-#     # Upload files
-#     st.header("1. Upload Excel File")
-
-#     # Kiểm tra số lượng file đã tải lên
-#     uploaded_files = st.file_uploader("Upload Excel file", type=["xlsx"], accept_multiple_files=True)
-
-#     # Hiển thị thông tin về file đã upload
-#     if uploaded_files:
-#         st.write("Uploaded files:")
-#         for uploaded_file in uploaded_files:
-#             st.write(uploaded_file.name)
-    
-#     dataframes = {}
-#     data = None
-#     final_df1 = None
-
-#     if uploaded_files:
-#         dataframes, data = process_uploaded_files(uploaded_files)
-
-#         no_oulet = st.slider("Select number outlet:", 0, 40, 30, 1)
-#         st.text(f"Selected number: {no_oulet}")
-        
-#         st.header("2. Result")
-        
-#         province_name = data.iloc[0]['ProvinceName']
-#         G = ox.graph_from_place(f'{province_name}, VietNam', network_type='bike')
-#         # st.header("Loaded Map Done")
-        
-#         data['Longitude'] = data['Longitude'].astype(float)
-#         data['Latitude'] = data['Latitude'].astype(float)
-        
-#         cleaned_latitude = remove_outliers_iqr(data['Latitude'])
-#         cleaned_longitude = remove_outliers_iqr(data['Longitude'])
-
-#         # Làm sạch dữ liệu
-#         cleaned_data = data[(data['Latitude'].isin(cleaned_latitude)) & (data['Longitude'].isin(cleaned_longitude))]
-        
-#         all_data, new_map = Create_square(cleaned_data, no_oulet)
-#         all_data = Create_RD(all_data)
-         
-#         # st.dataframe(all_data)   
-#         # folium_static(new_map)
-        
-#         # Tạo một danh sách trống để lưu trữ visited_points và baby_map
-#         visited_points = []
-
-#         # Vòng lặp từ 1 đến 5
-#         for i in range(1, 6):
-#             print('Dang la lan thu ' + str(i))
-#             # Lọc dữ liệu cho nhóm hiện tại (i)
-#             group_df = all_data[all_data['SRD'] == i]
-
-#             colors = ['black', 'beige', 'lightblue', 'gray', 'blue', 'darkred', 'lightgreen', 'purple', 'red', 'green', 'lightred', 'white', 'darkblue', 'darkpurple', 'cadetblue', 'orange', 'pink', 'lightgray', 'darkgreen', 'pink', 'yellow', 'purple']
-#             random_color = random.choice(colors)
-            
-#             # Tạo visited_points và baby_map cho nhóm hiện tại
-#             visited_points_i, new_map = create_path_2(group_df, G, new_map, random_color)
-
-#             # Tạo tên biến động cho visited_points và baby_map
-#             globals()["visited_points_" + str(i)] = visited_points_i
-
-#             # Thêm visited_points và baby_map vào danh sách chung
-#             visited_points.append(visited_points_i)
-            
-#         # Khởi tạo DataFrame rỗng
-#         thu_danhsach = pd.DataFrame()
-
-#         # Duyệt qua từng DataFrame trong visited_points
-#         for i, df in enumerate(visited_points):
-#             # Tạo cột 'List' và gán giá trị là số thứ tự của df + 1
-#             df['List'] = i + 1
-#             # Tạo cột 'Sequence' và gán giá trị từ 1 đến chiều dài của df
-#             df['Sequence'] = range(1, len(df) + 1)
-#             # Kết hợp DataFrame hiện tại vào thu_danhsach
-#             thu_danhsach = pd.concat([thu_danhsach, df], ignore_index=True)
-        
-#         # In ra kết quả
-#         st.dataframe(thu_danhsach)
-#         folium_static(new_map)
 
 def draw_optimal_path(visited_points, new_map, G, random_color, group_feature):
     # Extract the last two points from visited_points
@@ -637,8 +466,8 @@ def main():
 
         # Thiết lập địa điểm và network_type
         # location = "Thủ Đức VietNam"
-        # network_type = 'drive'
-        network_type = 'bike'
+        network_type = 'drive'
+        #network_type = 'bike'
 
         # Sử dụng osmnx để tải dữ liệu đồng thời xây dựng biểu đồ đường đi
         G = ox.graph_from_place(f'{province_name}, VietNam', network_type=network_type)
