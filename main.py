@@ -4,8 +4,8 @@ from streamlit_folium import folium_static
 import folium
 
 # Thiết lập địa điểm và network_type
-location = "Tỉnh Bến Tre"
-network_type = 'bike'
+location = "Thủ Đức VietNam"
+network_type = 'drive'
 
 # Sử dụng osmnx để tải dữ liệu đồng thời xây dựng biểu đồ đường đi
 G = ox.graph_from_place(location, network_type=network_type)
