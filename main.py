@@ -460,8 +460,8 @@ def main():
         
         province_name = data.iloc[0]['ProvinceName']
         st.text("Đang load map") 
-        network_type = 'drive'
-        #network_type = 'bike'
+        #network_type = 'drive'
+        network_type = 'bike'
 
         # Sử dụng osmnx để tải dữ liệu đồng thời xây dựng biểu đồ đường đi
         G = ox.graph_from_place(f'{province_name}, VietNam', network_type=network_type)
