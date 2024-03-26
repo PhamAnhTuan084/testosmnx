@@ -637,7 +637,7 @@ def main():
 
         # Thiết lập địa điểm và network_type
         location = "Thủ Đức VietNam"
-        network_type = 'drive'
+        network_type = 'bike'
 
         # Sử dụng osmnx để tải dữ liệu đồng thời xây dựng biểu đồ đường đi
         G = ox.graph_from_place(location, network_type=network_type)
