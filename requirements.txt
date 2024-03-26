@@ -8,3 +8,4 @@ shapely
 streamlit
 streamlit-folium
 openpyxl
+scikit-learn
