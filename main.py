@@ -636,7 +636,8 @@ def main():
         # st.text("Loaded Map Done")
 
         # Thiết lập địa điểm và network_type
-        location = "Thủ Đức VietNam"
+        # location = "Thủ Đức VietNam"
+        location = "Tây Ninh VietNam"
         network_type = 'bike'
 
         # Sử dụng osmnx để tải dữ liệu đồng thời xây dựng biểu đồ đường đi
