@@ -659,5 +659,5 @@ st.text("load thành công")
 #         # # st.dataframe(all_data)   
 #         # folium_static(new_map)        
             
-if __name__ == '__main__':
-    main()        
+# if __name__ == '__main__':
+#     main()        
