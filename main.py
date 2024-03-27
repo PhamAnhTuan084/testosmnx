@@ -643,22 +643,22 @@ def main():
         # G = ox.graph_from_place(f'{province_name}, VietNam', network_type=network_type)
         G = ox.graph_from_place(location, network_type=network_type)
         st.text("Loaded Map Done")
-        # data['Longitude'] = data['Longitude'].astype(float)
-        # data['Latitude'] = data['Latitude'].astype(float)
+        data['Longitude'] = data['Longitude'].astype(float)
+        data['Latitude'] = data['Latitude'].astype(float)
         
-        # cleaned_latitude = remove_outliers_iqr(data['Latitude'])
-        # cleaned_longitude = remove_outliers_iqr(data['Longitude'])
+        cleaned_latitude = remove_outliers_iqr(data['Latitude'])
+        cleaned_longitude = remove_outliers_iqr(data['Longitude'])
 
-        # # Làm sạch dữ liệu
-        # cleaned_data = data[(data['Latitude'].isin(cleaned_latitude)) & (data['Longitude'].isin(cleaned_longitude))]
+        # Làm sạch dữ liệu
+        cleaned_data = data[(data['Latitude'].isin(cleaned_latitude)) & (data['Longitude'].isin(cleaned_longitude))]
         
-        # all_data, new_map = Create_square(cleaned_data, no_oulet)
-        # all_data = Create_RD(all_data)
+        all_data, new_map = Create_square(cleaned_data, no_oulet)
+        all_data = Create_RD(all_data)
         
-        # sovongchay = all_data['SRD'].value_counts().index[-1] + 1
-        # # st.text(sovongchay)     
-        # # st.dataframe(all_data)   
-        # folium_static(new_map)        
+        sovongchay = all_data['SRD'].value_counts().index[-1] + 1
+        # st.text(sovongchay)     
+        # st.dataframe(all_data)   
+        folium_static(new_map)        
             
 if __name__ == '__main__':
     main()        
