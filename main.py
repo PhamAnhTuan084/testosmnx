@@ -501,9 +501,12 @@ def main():
                 # Append visited_points to the list
                 visited_points_list.append(visited_points_i)
 
+                print('Chay Xong Lan thu ' + str(i))
+
             # Create a Layer Control
             layer_control = folium.LayerControl().add_to(new_map)
-                
+
+            print('Tao Danh Sach Final')
             # Khởi tạo DataFrame rỗng
             thu_danhsach = pd.DataFrame()
 
@@ -516,10 +519,14 @@ def main():
                 # Kết hợp DataFrame hiện tại vào thu_danhsach
                 thu_danhsach = pd.concat([thu_danhsach, df], ignore_index=True)
             
+            print('Tao Group Cho Map')
             # In ra kết quả
             st.dataframe(thu_danhsach)
             # folium_static(new_map, width=1000, height=800)
             folium_static(new_map)
+
+            print('Da chay xong')
+            st.header("FINISH")
             
 if __name__ == '__main__':
     main()        
