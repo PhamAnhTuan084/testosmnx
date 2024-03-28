@@ -671,41 +671,41 @@ def main():
             # st.dataframe(all_data)   
             folium_static(new_map)
             
-            # visited_points_list = []
-            # # Loop from 1 to 3
-            # for i in range(1, sovongchay):
-            #     print('Dang la lan thu ' + str(i))
-            #     # Filter data for the current group (i)
-            #     group_df = all_data[all_data['SRD'] == i]
+            visited_points_list = []
+            # Loop from 1 to 3
+            for i in range(1, sovongchay):
+                print('Dang la lan thu ' + str(i))
+                # Filter data for the current group (i)
+                group_df = all_data[all_data['SRD'] == i]
 
-            #     colors = ['black', 'lightblue', 'gray', 'blue', 'lightgreen', 'purple', 'red', 'green', 'white', 'darkblue', 'orange', 'pink', 'yellow']
-            #     random_color = random.choice(colors)
+                colors = ['black', 'lightblue', 'gray', 'blue', 'lightgreen', 'purple', 'red', 'green', 'white', 'darkblue', 'orange', 'pink', 'yellow']
+                random_color = random.choice(colors)
                 
-            #     # Create visited_points, new_map, and layer_control for the current group
-            #     visited_points_i, new_map = create_path_2(group_df, G, new_map, random_color, i)
+                # Create visited_points, new_map, and layer_control for the current group
+                visited_points_i, new_map = create_path_2(group_df, G, new_map, random_color, i)
 
-            #     # Append visited_points to the list
-            #     visited_points_list.append(visited_points_i)
+                # Append visited_points to the list
+                visited_points_list.append(visited_points_i)
 
-            # # Create a Layer Control
-            # layer_control = folium.LayerControl().add_to(new_map)
+            # Create a Layer Control
+            layer_control = folium.LayerControl().add_to(new_map)
                 
-            # # Khởi tạo DataFrame rỗng
-            # thu_danhsach = pd.DataFrame()
+            # Khởi tạo DataFrame rỗng
+            thu_danhsach = pd.DataFrame()
 
-            # # Duyệt qua từng DataFrame trong visited_points_list
-            # for i, df in enumerate(visited_points_list):
-            #     # Tạo cột 'List' và gán giá trị là số thứ tự của df + 1
-            #     df['List'] = i + 1
-            #     # Tạo cột 'Sequence' và gán giá trị từ 1 đến chiều dài của df
-            #     df['Sequence'] = range(1, len(df) + 1)
-            #     # Kết hợp DataFrame hiện tại vào thu_danhsach
-            #     thu_danhsach = pd.concat([thu_danhsach, df], ignore_index=True)
+            # Duyệt qua từng DataFrame trong visited_points_list
+            for i, df in enumerate(visited_points_list):
+                # Tạo cột 'List' và gán giá trị là số thứ tự của df + 1
+                df['List'] = i + 1
+                # Tạo cột 'Sequence' và gán giá trị từ 1 đến chiều dài của df
+                df['Sequence'] = range(1, len(df) + 1)
+                # Kết hợp DataFrame hiện tại vào thu_danhsach
+                thu_danhsach = pd.concat([thu_danhsach, df], ignore_index=True)
             
-            # # In ra kết quả
-            # st.dataframe(thu_danhsach)
-            # # folium_static(new_map, width=1000, height=800)
-            # folium_static(new_map)
+            # In ra kết quả
+            st.dataframe(thu_danhsach)
+            # folium_static(new_map, width=1000, height=800)
+            folium_static(new_map)
             
 if __name__ == '__main__':
     main()        
