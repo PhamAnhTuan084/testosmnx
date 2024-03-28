@@ -442,20 +442,6 @@ def main():
         st.text(f"Selected number: {no_oulet}")
         
         st.header("2. Result")
-        
-        #province_name = data.iloc[0]['ProvinceName']
-        # st.text("Đang load map") 
-        # # G = ox.graph_from_place(f'{province_name}, VietNam', network_type='bike')
-        # G = ox.graph_from_place(f'{province_name}, VietNam', network_type='drive')
-        # st.text("Loaded Map Done")
-
-        # Thiết lập địa điểm và network_type
-        # location = "Thủ Đức VietNam"
-        #location = "Tây Ninh VietNam"
-        #network_type = 'bike'
-        
-        # Tạo text input cho vị trí (location)
-        # location = st.text_input("Nhập vị trí (location):", "Tây Ninh VietNam")
 
         # Tạo text input cho vị trí (location)
         location = st.text_input("Nhập vị trí (location):")
