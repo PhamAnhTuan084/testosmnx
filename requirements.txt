@@ -25,3 +25,4 @@ blinker
 certifi
 openpyxl
 scikit-learn
+psutil
