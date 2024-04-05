@@ -17,7 +17,6 @@ dataclasses
 six
 jinja2
 branca
-sklearn
 tornado
 numpy
 charset_normalizer
