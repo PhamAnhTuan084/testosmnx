@@ -454,15 +454,21 @@ def get_html_from_map(new_map):
     html = tmpfile.getvalue().decode()
     return html
 
-import sys
+# import sys
 
-def get_used_libraries():
-    used_libraries = set()
-    for module_name, module in sys.modules.items():
-        if hasattr(module, '__file__'):
-            library_name = module_name.split('.')[0]  # Lấy phần tên của thư viện
-            used_libraries.add(library_name)
-    return used_libraries
+# def get_used_libraries():
+#     used_libraries = set()
+#     for module_name, module in sys.modules.items():
+#         if hasattr(module, '__file__'):
+#             library_name = module_name.split('.')[0]  # Lấy phần tên của thư viện
+#             used_libraries.add(library_name)
+#     return used_libraries
+
+def download_csv(dataframe, filename):
+    csv = dataframe.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()
+    href = f'<a href="data:text/csv;base64,{b64}" download="{filename}.csv">Download CSV</a>'
+    return href
 
 def main():
     st.markdown("<h1 style='text-align: center; font-size: 55px;'>Traveling Salesman Problem</h1>", unsafe_allow_html=True)
@@ -555,9 +561,9 @@ def main():
             
             print('Tao Group Cho Map')
             # In ra kết quả
-            st.dataframe(thu_danhsach)
+            # st.dataframe(thu_danhsach)
             # folium_static(new_map, width=1000, height=800)
-            folium_static(new_map)
+            # folium_static(new_map)
 
             # Tải new_map về dưới dạng HTML
             html = get_html_from_map(new_map)
@@ -565,30 +571,34 @@ def main():
             href = f'<a href="data:text/html;base64,{b64}" download="map.html">Download Map</a>'
             st.markdown(href, unsafe_allow_html=True)    
 
+            # Tải dataframe về dưới dạng CSV
+            href_csv = download_csv(thu_danhsach, "thu_danhsach")
+            st.markdown(href_csv, unsafe_allow_html=True) 
+
             print('Da chay xong')
             st.markdown("<h3 style='text-align: center; font-size: 30px;'>FINISH</h1>", unsafe_allow_html=True)
             
-            import psutil
-            import os
-            # Lấy thông tin quy trình hiện tại
-            process = psutil.Process(os.getpid())
+            # import psutil
+            # import os
+            # # Lấy thông tin quy trình hiện tại
+            # process = psutil.Process(os.getpid())
 
-            # In ra tổng lượng memory đã sử dụng (bằng megabyte)
-            print("Tổng lượng memory đã sử dụng:", process.memory_info().rss / 1024 ** 2, "MB")
+            # # In ra tổng lượng memory đã sử dụng (bằng megabyte)
+            # print("Tổng lượng memory đã sử dụng:", process.memory_info().rss / 1024 ** 2, "MB")
 
-            # In ra lượng memory đang sử dụng (bằng megabyte)
-            print("Lượng memory đang sử dụng:", process.memory_info().vms / 1024 ** 2, "MB")
+            # # In ra lượng memory đang sử dụng (bằng megabyte)
+            # print("Lượng memory đang sử dụng:", process.memory_info().vms / 1024 ** 2, "MB")
             
-            # Lấy thông tin về CPU
-            cpu_count = psutil.cpu_count(logical=False)  # Số lượng CPU vật lí
-            cpu_percent = psutil.cpu_percent(interval=1)  # Phần trăm CPU đang được sử dụng trong 1 giây
+            # # Lấy thông tin về CPU
+            # cpu_count = psutil.cpu_count(logical=False)  # Số lượng CPU vật lí
+            # cpu_percent = psutil.cpu_percent(interval=1)  # Phần trăm CPU đang được sử dụng trong 1 giây
 
-            print("Số lượng CPU vật lí:", cpu_count)
-            print("Phần trăm CPU đang được sử dụng:", cpu_percent)
+            # print("Số lượng CPU vật lí:", cpu_count)
+            # print("Phần trăm CPU đang được sử dụng:", cpu_percent)
 
-            used_libraries = get_used_libraries()
-            print("Các thư viện được sử dụng trong quá trình chạy:")
-            print(used_libraries)      
+            # used_libraries = get_used_libraries()
+            # print("Các thư viện được sử dụng trong quá trình chạy:")
+            # print(used_libraries)      
                         
 if __name__ == '__main__':
     main()        
