@@ -10,8 +10,11 @@ import networkx as nx
 from shapely.geometry import Polygon
 from shapely.geometry import LineString, Point
 import random
+from geopy.distance import geodesic
 import streamlit as st
 from streamlit_folium import folium_static
+import base64
+from io import BytesIO
 
 def process_uploaded_files(uploaded_files):
     dataframes = {}
@@ -247,15 +250,57 @@ def Create_RD(all_data):
 
   return all_data
 
-# Create a function to calculate distance using the road network graph
-def calculate_distance(point_coords, graph, filtered_df):
+def calculate_distance(point_coords, filtered_df):
+    # Convert point_coords to a Point object
     point = Point(point_coords[::-1])  # Reverse the order of coordinates
-    distances = {}
-    for index, row in filtered_df.iterrows():
-        dest_point = Point((row['Longitude'], row['Latitude']))
-        distance = point.distance(dest_point)  # Calculate distance using Shapely
-        distances[index] = distance
-    return distances
+
+    # Calculate distance using Shapely and store in a new column
+    filtered_df['distance_to_point'] = filtered_df.apply(
+        lambda row: point.distance(Point(row['Longitude'], row['Latitude'])),
+        axis=1
+    )
+
+    # Find the closest point
+    closest_point = filtered_df.loc[filtered_df['distance_to_point'].idxmin()]
+
+    return closest_point['distance_to_point'], closest_point
+
+def draw_optimal_path(visited_points, new_map, G, random_color, group_feature):
+    # Extract the last two points from visited_points
+    visited_points_df = pd.DataFrame(visited_points.tail(2))
+    last_point = (visited_points_df.iloc[-2]['Latitude'], visited_points_df.iloc[-2]['Longitude'])
+    final_point = (visited_points_df.iloc[-1]['Latitude'], visited_points_df.iloc[-1]['Longitude'])
+
+    # Find the optimal path using OSMnx
+    start_node = ox.distance.nearest_nodes(G, last_point[1], last_point[0])
+    destination_node = ox.distance.nearest_nodes(G, final_point[1], final_point[0])
+
+    optimal_path_nodes = ox.shortest_path(G, start_node, destination_node, weight='length')
+
+    if optimal_path_nodes is not None:
+        optimal_path_coordinates = [(G.nodes[node]['y'], G.nodes[node]['x']) for node in optimal_path_nodes]
+
+        # Vẽ đường dẫn tối ưu giữa hai điểm cuối cùng
+        poly_line = folium.PolyLine(optimal_path_coordinates, color=random_color, weight=2.5, opacity=1)
+        poly_line.add_to(group_feature)
+
+        # Thêm điểm popup cho điểm thứ hai từ cuối
+        last_point_popup = f"Order: {visited_points_df.index[-2] + 1}<br>OutletID: {visited_points_df['OutletID'].iloc[-2]}<br>OutletName: {visited_points_df['OutletName'].iloc[-2]}<br>Latitude: {last_point[0]}<br>Longitude: {last_point[1]}<br>SRD: {visited_points_df['SRD'].iloc[-2]}<br>RD: {visited_points_df['RD'].iloc[-2]}"
+        last_marker = folium.Marker(location=[last_point[0], last_point[1]], popup=folium.Popup(last_point_popup, max_width=300))
+        last_marker.add_to(group_feature)
+
+        # Thêm điểm popup cho điểm cuối cùng
+        final_point_popup = f"Order: {visited_points_df.index[-1] + 1}<br>OutletID: {visited_points_df['OutletID'].iloc[-1]}<br>OutletName: {visited_points_df['OutletName'].iloc[-1]}<br>Latitude: {final_point[0]}<br>Longitude: {final_point[1]}<br>SRD: {visited_points_df['SRD'].iloc[-1]}<br>RD: {visited_points_df['RD'].iloc[-1]}"
+        final_marker = folium.Marker(location=[final_point[0], final_point[1]], popup=folium.Popup(final_point_popup, max_width=300))
+        final_marker.add_to(group_feature)
+
+    else:
+        print("No path found between", start_node, "and", destination_node)
+
+    return new_map
+
+def distance(lat1, lon1, lat2, lon2):
+    return geodesic((lat1, lon1), (lat2, lon2)).meters
 
 def calculate_distance_between_two_points(point1_coords, point2_coords, graph, filtered_df):
     # Get coordinates of point 1 and point 2
@@ -320,42 +365,7 @@ def find_nearest_point(visited_points, closest_points):
 
     return min_perimeter_outlet_df
 
-def draw_optimal_path(visited_points, new_map, G, random_color, group_feature):
-    # Extract the last two points from visited_points
-    visited_points_df = pd.DataFrame(visited_points.tail(2))
-    last_point = (visited_points_df.iloc[-2]['Latitude'], visited_points_df.iloc[-2]['Longitude'])
-    final_point = (visited_points_df.iloc[-1]['Latitude'], visited_points_df.iloc[-1]['Longitude'])
-
-    # Find the optimal path using OSMnx
-    start_node = ox.distance.nearest_nodes(G, last_point[1], last_point[0])
-    destination_node = ox.distance.nearest_nodes(G, final_point[1], final_point[0])
-
-    optimal_path_nodes = ox.shortest_path(G, start_node, destination_node, weight='length')
-
-    if optimal_path_nodes is not None:
-        optimal_path_coordinates = [(G.nodes[node]['y'], G.nodes[node]['x']) for node in optimal_path_nodes]
-
-        # Vẽ đường dẫn tối ưu giữa hai điểm cuối cùng
-        poly_line = folium.PolyLine(optimal_path_coordinates, color=random_color, weight=2.5, opacity=1)
-        poly_line.add_to(group_feature)
-
-        # Thêm điểm popup cho điểm thứ hai từ cuối
-        last_point_popup = f"Order: {visited_points_df.index[-2] + 1}<br>OutletID: {visited_points_df['OutletID'].iloc[-2]}<br>OutletName: {visited_points_df['OutletName'].iloc[-2]}<br>Latitude: {last_point[0]}<br>Longitude: {last_point[1]}<br>SRD: {visited_points_df['SRD'].iloc[-2]}<br>RD: {visited_points_df['RD'].iloc[-2]}"
-        last_marker = folium.Marker(location=[last_point[0], last_point[1]], popup=folium.Popup(last_point_popup, max_width=300))
-        last_marker.add_to(group_feature)
-
-        # Thêm điểm popup cho điểm cuối cùng
-        final_point_popup = f"Order: {visited_points_df.index[-1] + 1}<br>OutletID: {visited_points_df['OutletID'].iloc[-1]}<br>OutletName: {visited_points_df['OutletName'].iloc[-1]}<br>Latitude: {final_point[0]}<br>Longitude: {final_point[1]}<br>SRD: {visited_points_df['SRD'].iloc[-1]}<br>RD: {visited_points_df['RD'].iloc[-1]}"
-        final_marker = folium.Marker(location=[final_point[0], final_point[1]], popup=folium.Popup(final_point_popup, max_width=300))
-        final_marker.add_to(group_feature)
-
-    else:
-        print("No path found between", start_node, "and", destination_node)
-
-    return new_map
-
 def create_path_2(group_1_df, G, new_map, random_color, i):
-    # Tính toán tọa độ của hình vuông bao quanh tất cả các điểm
     min_lat = group_1_df['Latitude'].min()
     max_lat = group_1_df['Latitude'].max()
     min_lon = group_1_df['Longitude'].min()
@@ -363,24 +373,21 @@ def create_path_2(group_1_df, G, new_map, random_color, i):
 
     # Sử dụng hàm để tạo bản đồ
     baby_map = create_square_map(group_1_df, min_lat, max_lat, min_lon, max_lon)
-
+    
     # Sử dụng để tìm điểm gần góc
     min_distance_data = find_nearest_corner_point(min_lat, min_lon, max_lat, max_lon, group_1_df)
 
     # Lọc data
     filtered_df = group_1_df.drop(min_distance_data[1]['point'].name)
-
+    
     # Assuming min_distance_data is defined somewhere in your code
     nearest_point_coords = min_distance_data[0]
 
-    # Call the function to calculate distances
-    distances = calculate_distance(nearest_point_coords, G, filtered_df)
+    # Call the function to calculate distances and find the closest point
+    closest_distance, closest_point = calculate_distance(nearest_point_coords, filtered_df)
 
-    # Add distances to filtered_df
-    filtered_df['distance_to_nearest'] = filtered_df.index.map(distances)
-
-    # Get the four closest points
-    closest_points = filtered_df.nsmallest(1, 'distance_to_nearest')
+    # print("Closest distance:", closest_distance)
+    # print("Closest point:", closest_point)   
 
     start_point = min_distance_data[1]['point']
 
@@ -389,32 +396,73 @@ def create_path_2(group_1_df, G, new_map, random_color, i):
 
     # Thêm start_point vào DataFrame
     visited_points = pd.concat([visited_points, start_point.to_frame().T], ignore_index=True)
-    visited_points = pd.concat([visited_points, closest_points], ignore_index=True)
-
-    # Filter out rows from sorted_df that are not in visited_points based on 'OutletID'
+    visited_points = pd.concat([visited_points, closest_point.to_frame().T], ignore_index=True)    
     filtered_sorted_df = group_1_df[~group_1_df['OutletID'].isin(visited_points['OutletID'])]
 
-    # Create a new FeatureGroup for this group
     group_feature = folium.FeatureGroup(name="Group " + str(i)).add_to(new_map)
 
-    # Draw the optimal path for the initial two points
     new_map = draw_optimal_path(visited_points, new_map, G, random_color, group_feature)
-
+    
     while not filtered_sorted_df.empty:
+        last_row = visited_points.tail(1).iloc[0]
+        # Tâm của hình tròn
+        center_lat, center_lon = last_row['Latitude'], last_row['Longitude']
+
+        # Bán kính ban đầu của hình tròn
+        radius = 100
+
+        # Lặp cho đến khi tìm được ít nhất một điểm hoặc không thể tăng bán kính nữa
+        while True:
+            # Lọc dữ liệu
+            filtered_data = []
+            for index, row in filtered_sorted_df.iterrows():
+                point_lat, point_lon = row['Latitude'], row['Longitude']
+                if distance(center_lat, center_lon, point_lat, point_lon) <= radius:
+                    filtered_data.append(row)
+
+            # Tạo DataFrame từ dữ liệu lọc
+            filtered_df_within_circle = pd.DataFrame(filtered_data)
+
+            # Kiểm tra nếu có ít nhất một điểm trong hình tròn
+            if len(filtered_df_within_circle) > 0:
+                break
+            
+            # Nếu không có điểm nào và bán kính đã tăng lên, tăng bán kính thêm 100m và tiếp tục lặp
+            radius += 100
+
+        # In ra filtered_df_within_circle
+        print(filtered_df_within_circle)
+
         last_two_rows = visited_points.tail(2)
-        distances_between_two_points = calculate_distance_between_two_points(last_two_rows.iloc[0], last_two_rows.iloc[1], G, filtered_sorted_df)
+        distances_between_two_points = calculate_distance_between_two_points(last_two_rows.iloc[0], last_two_rows.iloc[1], G, filtered_df_within_circle)
 
         closest_points_indices = sorted(distances_between_two_points, key=distances_between_two_points.get)[:2]
-        closest_points = filtered_sorted_df.loc[closest_points_indices]
+        closest_points = filtered_df_within_circle.loc[closest_points_indices]
         min_perimeter_outlet_df = find_nearest_point(visited_points, closest_points)
 
         visited_points = pd.concat([visited_points, min_perimeter_outlet_df], ignore_index=True)
         filtered_sorted_df = group_1_df[~group_1_df['OutletID'].isin(visited_points['OutletID'])]
         filtered_sorted_df.info()
-        # Draw the optimal path for the new points
         new_map = draw_optimal_path(visited_points, new_map, G, random_color, group_feature)
-
+  
     return visited_points, new_map
+
+def get_html_from_map(new_map):
+    """Get HTML string from folium.Map object"""
+    tmpfile = BytesIO()
+    new_map.save(tmpfile, close_file=False)
+    html = tmpfile.getvalue().decode()
+    return html
+
+import sys
+
+def get_used_libraries():
+    used_libraries = set()
+    for module_name, module in sys.modules.items():
+        if hasattr(module, '__file__'):
+            library_name = module_name.split('.')[0]  # Lấy phần tên của thư viện
+            used_libraries.add(library_name)
+    return used_libraries
 
 def main():
     st.markdown("<h1 style='text-align: center; font-size: 55px;'>Traveling Salesman Problem</h1>", unsafe_allow_html=True)
@@ -425,11 +473,11 @@ def main():
     # Kiểm tra số lượng file đã tải lên
     uploaded_files = st.file_uploader("Upload Excel file", type=["xlsx"], accept_multiple_files=True)
 
-    # Hiển thị thông tin về file đã upload
-    if uploaded_files:
-        st.write("Uploaded files:")
-        for uploaded_file in uploaded_files:
-            st.write(uploaded_file.name)
+    # # Hiển thị thông tin về file đã upload
+    # if uploaded_files:
+    #     st.write("Uploaded files:")
+    #     for uploaded_file in uploaded_files:
+    #         st.write(uploaded_file.name)
     
     dataframes = {}
     data = None
@@ -440,8 +488,6 @@ def main():
 
         no_oulet = st.slider("Select number outlet:", 0, 40, 30, 1)
         st.text(f"Selected number: {no_oulet}")
-        
-        st.header("2. Result")
 
         # Tạo text input cho vị trí (location)
         location = st.text_input("Nhập vị trí (location):")
@@ -450,10 +496,11 @@ def main():
         network_type = 'bike'
         
         if location:
-            # Sử dụng osmnx để tải dữ liệu đồng thời xây dựng biểu đồ đường đi
-            # G = ox.graph_from_place(f'{province_name}, VietNam', network_type=network_type)
+            st.header("2. Result")
+            
             G = ox.graph_from_place(location, network_type=network_type)
             st.text("Loaded Map Done")
+            
             data['Longitude'] = data['Longitude'].astype(float)
             data['Latitude'] = data['Latitude'].astype(float)
             
@@ -467,13 +514,14 @@ def main():
             all_data = Create_RD(all_data)
             
             sovongchay = all_data['SRD'].value_counts().index[-1] + 1
-            # st.text(sovongchay)     
+            st.text('So Vong Lap: ' + str(sovongchay))     
             # st.dataframe(all_data)   
-            folium_static(new_map)
+            # folium_static(new_map)
             
             visited_points_list = []
-            # Loop from 1 to 3
+            
             for i in range(1, sovongchay):
+                st.text('Dang la lan thu ' + str(i))
                 print('Dang la lan thu ' + str(i))
                 # Filter data for the current group (i)
                 group_df = all_data[all_data['SRD'] == i]
@@ -511,8 +559,36 @@ def main():
             # folium_static(new_map, width=1000, height=800)
             folium_static(new_map)
 
+            # Tải new_map về dưới dạng HTML
+            html = get_html_from_map(new_map)
+            b64 = base64.b64encode(html.encode()).decode()
+            href = f'<a href="data:text/html;base64,{b64}" download="map.html">Download Map</a>'
+            st.markdown(href, unsafe_allow_html=True)    
+
             print('Da chay xong')
-            st.header("FINISH")
+            st.markdown("<h3 style='text-align: center; font-size: 30px;'>FINISH</h1>", unsafe_allow_html=True)
             
+            import psutil
+            import os
+            # Lấy thông tin quy trình hiện tại
+            process = psutil.Process(os.getpid())
+
+            # In ra tổng lượng memory đã sử dụng (bằng megabyte)
+            print("Tổng lượng memory đã sử dụng:", process.memory_info().rss / 1024 ** 2, "MB")
+
+            # In ra lượng memory đang sử dụng (bằng megabyte)
+            print("Lượng memory đang sử dụng:", process.memory_info().vms / 1024 ** 2, "MB")
+            
+            # Lấy thông tin về CPU
+            cpu_count = psutil.cpu_count(logical=False)  # Số lượng CPU vật lí
+            cpu_percent = psutil.cpu_percent(interval=1)  # Phần trăm CPU đang được sử dụng trong 1 giây
+
+            print("Số lượng CPU vật lí:", cpu_count)
+            print("Phần trăm CPU đang được sử dụng:", cpu_percent)
+
+            used_libraries = get_used_libraries()
+            print("Các thư viện được sử dụng trong quá trình chạy:")
+            print(used_libraries)      
+                        
 if __name__ == '__main__':
     main()        
