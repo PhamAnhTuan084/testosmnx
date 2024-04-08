@@ -470,12 +470,22 @@ def download_csv(dataframe, filename):
     href = f'<a href="data:text/csv;charset=utf-8;base64,{b64}" download="{filename}.csv">Download CSV</a>'
     return href
 
+
 def download_excel(dataframe, filename):
-    excel_data = dataframe.to_excel(index=False, encoding='utf-8', engine='xlsxwriter')
-    with open(f"{filename}.xlsx", "rb") as excel_file:
-        excel_binary = excel_file.read()
+    # Tạo một đối tượng BytesIO để lưu trữ dữ liệu Excel
+    excel_buffer = BytesIO()
+    
+    # Sử dụng XlsxWriter engine để tạo file Excel
+    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter', options={'strings_to_utf8': True}) as writer:
+        dataframe.to_excel(writer, index=False)
+    
+    # Lấy nội dung từ đối tượng BytesIO và mã hóa nó thành base64
+    excel_binary = excel_buffer.getvalue()
     b64 = base64.b64encode(excel_binary).decode()
+    
+    # Tạo liên kết để tải xuống file Excel
     href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}.xlsx">Download Excel</a>'
+    
     return href
 
 def main():
