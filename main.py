@@ -465,7 +465,7 @@ def get_html_from_map(new_map):
 #     return used_libraries
 
 def download_csv(dataframe, filename):
-    csv = dataframe.to_csv(index=False, encoding='utf-8')
+    csv = dataframe.to_csv(index=False, encoding='utf-8-sig')  # Encoding using utf-8-sig
     b64 = base64.b64encode(csv.encode()).decode()
     href = f'<a href="data:text/csv;charset=utf-8;base64,{b64}" download="{filename}.csv">Download CSV</a>'
     return href
