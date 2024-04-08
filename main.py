@@ -480,8 +480,12 @@ def download_excel(dataframe, filename):
     wb = Workbook()
     ws = wb.active
     
-    # Ghi dữ liệu từ DataFrame vào worksheet
-    for r_idx, row in enumerate(dataframe.iterrows(), 1):
+    # Ghi tên các cột vào hàng đầu tiên
+    for c_idx, col_name in enumerate(dataframe.columns, 1):
+        ws.cell(row=1, column=c_idx, value=col_name)
+    
+    # Ghi dữ liệu từ DataFrame vào worksheet từ hàng thứ hai trở đi
+    for r_idx, row in enumerate(dataframe.iterrows(), 2):  # Bắt đầu từ hàng thứ hai
         for c_idx, value in enumerate(row[1], 1):
             ws.cell(row=r_idx, column=c_idx, value=value)
     
