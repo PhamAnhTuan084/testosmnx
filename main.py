@@ -470,6 +470,14 @@ def download_csv(dataframe, filename):
     href = f'<a href="data:text/csv;charset=utf-8;base64,{b64}" download="{filename}.csv">Download CSV</a>'
     return href
 
+def download_excel(dataframe, filename):
+    excel_data = dataframe.to_excel(index=False, encoding='utf-8', engine='xlsxwriter')
+    with open(f"{filename}.xlsx", "rb") as excel_file:
+        excel_binary = excel_file.read()
+    b64 = base64.b64encode(excel_binary).decode()
+    href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}.xlsx">Download Excel</a>'
+    return href
+
 def main():
     st.markdown("<h1 style='text-align: center; font-size: 55px;'>Traveling Salesman Problem</h1>", unsafe_allow_html=True)
 
@@ -571,8 +579,8 @@ def main():
             href = f'<a href="data:text/html;base64,{b64}" download="map.html">Download Map</a>'
             st.markdown(href, unsafe_allow_html=True)    
 
-            # Tải dataframe về dưới dạng CSV
-            href_csv = download_csv(thu_danhsach, "thu_danhsach")
+            # Tải dataframe về dưới dạng CSV/excel
+            href_csv = download_excel(thu_danhsach, "thu_danhsach")
             st.markdown(href_csv, unsafe_allow_html=True) 
 
             print('Da chay xong')
