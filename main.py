@@ -470,21 +470,31 @@ def download_csv(dataframe, filename):
     href = f'<a href="data:text/csv;charset=utf-8;base64,{b64}" download="{filename}.csv">Download CSV</a>'
     return href
 
+import base64
+import pandas as pd
+from io import BytesIO
+from openpyxl.workbook import Workbook
 
 def download_excel(dataframe, filename):
-    # Tạo một đối tượng BytesIO để lưu trữ dữ liệu Excel
-    excel_buffer = BytesIO()
+    # Tạo một đối tượng Workbook từ openpyxl
+    wb = Workbook()
+    ws = wb.active
     
-    # Sử dụng XlsxWriter engine để tạo file Excel
-    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter', options={'strings_to_utf8': True}) as writer:
-        dataframe.to_excel(writer, index=False)
+    # Ghi dữ liệu từ DataFrame vào worksheet
+    for r_idx, row in enumerate(dataframe.iterrows(), 1):
+        for c_idx, value in enumerate(row[1], 1):
+            ws.cell(row=r_idx, column=c_idx, value=value)
+    
+    # Lưu workbook vào đối tượng BytesIO
+    excel_buffer = BytesIO()
+    wb.save(excel_buffer)
     
     # Lấy nội dung từ đối tượng BytesIO và mã hóa nó thành base64
     excel_binary = excel_buffer.getvalue()
     b64 = base64.b64encode(excel_binary).decode()
     
-    # Tạo liên kết để tải xuống file Excel
-    href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}.xlsx">Download Excel</a>'
+    # Tạo liên kết để tải xuống file Excel với UTF-8 encoding
+    href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8;base64,{b64}" download="{filename}.xlsx">Download Excel</a>'
     
     return href
 
