@@ -464,10 +464,20 @@ def get_html_from_map(new_map):
 #             used_libraries.add(library_name)
 #     return used_libraries
 
-def download_csv(dataframe, filename):
-    csv = dataframe.to_csv(index=False)
-    b64 = base64.b64encode(csv.encode()).decode()
-    href = f'<a href="data:text/csv;base64,{b64}" download="{filename}.csv">Download CSV</a>'
+# def download_csv(dataframe, filename):
+#     csv = dataframe.to_csv(index=False)
+#     b64 = base64.b64encode(csv.encode()).decode()
+#     href = f'<a href="data:text/csv;base64,{b64}" download="{filename}.csv">Download CSV</a>'
+#     return href
+
+def download_excel(dataframe, filename):
+    excel_buffer = io.BytesIO()
+    with pd.ExcelWriter(excel_buffer, engine='xlsxwriter', options={'strings_to_utf8': True}) as writer:
+        dataframe.to_excel(writer, index=False, encoding='utf-8')
+    excel_buffer.seek(0)
+    excel_data = excel_buffer.getvalue()
+    b64 = base64.b64encode(excel_data).decode()
+    href = f'<a href="data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,{b64}" download="{filename}.xlsx">Download Excel</a>'
     return href
 
 def main():
@@ -571,9 +581,13 @@ def main():
             href = f'<a href="data:text/html;base64,{b64}" download="map.html">Download Map</a>'
             st.markdown(href, unsafe_allow_html=True)    
 
-            # Tải dataframe về dưới dạng CSV
-            href_csv = download_csv(thu_danhsach, "thu_danhsach")
-            st.markdown(href_csv, unsafe_allow_html=True) 
+            # # Tải dataframe về dưới dạng CSV
+            # href_csv = download_csv(thu_danhsach, "thu_danhsach")
+            # st.markdown(href_csv, unsafe_allow_html=True) 
+
+            # Sử dụng hàm download_excel để tải DataFrame về dưới dạng Excel
+            href_excel = download_excel(thu_danhsach, "thu_danhsach")
+            st.markdown(href_excel, unsafe_allow_html=True)
 
             print('Da chay xong')
             st.markdown("<h3 style='text-align: center; font-size: 30px;'>FINISH</h1>", unsafe_allow_html=True)
